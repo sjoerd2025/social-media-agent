@@ -41,7 +41,7 @@ The user will provide you with the reports on the subject of the thread.
 
 Ensure you do NOT write the actual posts in this plan. For now, you're only planning the posts. Ensure you respond ONLY with the plan. Do NOT include any prefixing or suffixing dialog.`;
 
-function parseTotalPosts(generation: string): number | undefined {
+export function parseTotalPosts(generation: string): number | undefined {
   const reportMatch = generation.match(
     /<total-posts>([\s\S]*?)<\/total-posts>/,
   );
@@ -71,6 +71,34 @@ function parseTotalPosts(generation: string): number | undefined {
   return Number(totalPosts);
 }
 
+export async function extractTotalPostsWithLLM(
+  threadPlan: string,
+): Promise<number | undefined> {
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    temperature: 0,
+  });
+
+  const response = await model.invoke([
+    [
+      "system",
+      "You are a helpful assistant that extracts information from text. Your task is to extract the total number of posts from the given thread plan.",
+    ],
+    [
+      "user",
+      `Extract the total number of posts from the plan below. Return ONLY the number as an integer. If you cannot find the number, return '0'.\n\nPlan:\n${threadPlan}`,
+    ],
+  ]);
+
+  const content = response.content as string;
+  const match = content.match(/\d+/);
+  if (match) {
+    const number = parseInt(match[0], 10);
+    return number > 0 ? number : undefined;
+  }
+  return undefined;
+}
+
 export async function generateThreadPlan(
   state: GenerateThreadState,
 ): Promise<Partial<GenerateThreadState>> {
@@ -91,9 +119,16 @@ ${formatReportsForPrompt(state.reports)}
   ]);
 
   const threadPlan = response.content as string;
-  const totalPosts = parseTotalPosts(threadPlan);
+  let totalPosts = parseTotalPosts(threadPlan);
   if (totalPosts === undefined) {
-    // TODO: Make this pass to an LLM and have the LLM extract the number.
+    // Fallback to LLM extraction
+    console.log(
+      "Could not parse total posts with regex, trying LLM fallback...",
+    );
+    totalPosts = await extractTotalPostsWithLLM(threadPlan);
+  }
+
+  if (totalPosts === undefined) {
     throw new Error("Could not parse total posts from generation");
   }
 
