@@ -3,6 +3,7 @@ import passport from "passport";
 import { Strategy as TwitterStrategy } from "passport-twitter";
 import session from "express-session";
 import dotenv from "dotenv";
+import helmet from "helmet";
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ export class SocialAuthServer {
   }
 
   private configureMiddleware(): void {
+    this.app.use(helmet());
     this.app.use(
       session({
         secret: process.env.SESSION_SECRET || "your-session-secret",
