@@ -122,24 +122,24 @@ export async function generatePostsSubgraph(
 
   const afterSecondsList = getAfterSeconds(state);
 
-  const threadRunIds: ThreadRunId[] = [];
-
-  for (const { link, afterSeconds } of afterSecondsList) {
-    const { thread_id } = await client.threads.create();
-    const { run_id } = await client.runs.create(thread_id, "generate_post", {
-      input: {
-        links: [link],
-      },
-      config: {
-        configurable: {
-          [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
-          origin: "curate-data",
+  const threadRunIds: ThreadRunId[] = await Promise.all(
+    afterSecondsList.map(async ({ link, afterSeconds }) => {
+      const { thread_id } = await client.threads.create();
+      const { run_id } = await client.runs.create(thread_id, "generate_post", {
+        input: {
+          links: [link],
         },
-      },
-      afterSeconds,
-    });
-    threadRunIds.push({ thread_id, run_id });
-  }
+        config: {
+          configurable: {
+            [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
+            origin: "curate-data",
+          },
+        },
+        afterSeconds,
+      });
+      return { thread_id, run_id };
+    }),
+  );
 
   await sendSlackNotification(state, config);
 
