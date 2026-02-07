@@ -7,6 +7,8 @@ import {
 } from "../nodes/youtube.utils.js";
 import { HumanMessage } from "@langchain/core/messages";
 import { shouldExcludeYouTubeContent } from "../../should-exclude.js";
+import { interrupt } from "@langchain/langgraph";
+import { HumanInterrupt, HumanResponse } from "@langchain/langgraph/prebuilt";
 
 const GENERATE_REPORT_PROMPT = `You are a highly regarded marketing employee at a large software company.
 You have been assigned the provided YouTube video, and you need to generate a summary report of the content in the video.
@@ -83,10 +85,32 @@ export async function getVideoSummary(
 
   // 1800 = 30 minutes
   if (videoDurationS > 1800) {
-    // TODO: Replace with interrupt requesting user confirm if they want to continue
-    throw new Error(
-      "Video is longer than 30 minutes, please confirm you want to continue.",
-    );
+    const interruptValue: HumanInterrupt = {
+      action_request: {
+        action: "Confirm long video summary",
+        args: {
+          video_duration: videoDurationS,
+        },
+      },
+      config: {
+        allow_accept: true,
+        allow_ignore: true,
+        allow_respond: false,
+        allow_edit: false,
+      },
+      description: `Video is longer than 30 minutes (${Math.floor(videoDurationS / 60)} minutes). Please confirm you want to continue.`,
+    };
+
+    const response = interrupt<HumanInterrupt[], HumanResponse[]>([
+      interruptValue,
+    ])[0];
+
+    if (response.type === "ignore") {
+      return {
+        thumbnail: "",
+        summary: "",
+      };
+    }
   }
 
   const videoSummary = await generateVideoSummary(url);
