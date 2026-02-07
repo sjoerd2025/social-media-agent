@@ -11,55 +11,52 @@ export async function generatePosts(
     apiKey: process.env.LANGCHAIN_API_KEY,
   });
 
-  const idsAndTypes: Array<{
-    type: "thread" | "post";
-    thread_id: string;
-    run_id: string;
-  }> = [];
+  const idsAndTypes = await Promise.all(
+    state.reportAndPostType.map(async (reportAndPostType) => {
+      const { thread_id } = await client.threads.create();
+      const reportsMapped = reportAndPostType.reports.map((report, index) => {
+        if (!reportAndPostType.keyDetails[index]) {
+          return report;
+        }
 
-  for await (const reportAndPostType of state.reportAndPostType) {
-    const { thread_id } = await client.threads.create();
-    const reportsMapped = reportAndPostType.reports.map((report, index) => {
-      if (!reportAndPostType.keyDetails[index]) {
-        return report;
-      }
-
-      return `# Report Key Details:\n${reportAndPostType.keyDetails[index]}\n\n${report}`;
-    });
-    if (reportAndPostType.type === "thread") {
-      const run = await client.runs.create(thread_id, "generate_thread", {
-        input: {
-          reports: reportsMapped,
-        },
+        return `# Report Key Details:\n${reportAndPostType.keyDetails[index]}\n\n${report}`;
       });
 
-      idsAndTypes.push({
-        type: "thread",
-        thread_id,
-        run_id: run.run_id,
-      });
-    } else {
-      const reportString = reportsMapped.join("\n");
-      const linksInReport = extractUrls(reportString);
-      const run = await client.runs.create(thread_id, "generate_post", {
-        input: {},
-        command: {
-          goto: "generatePost",
-          update: {
-            report: reportString,
-            links: [linksInReport?.[0] || ""],
-            relevantLinks: [linksInReport?.[0] || ""],
+      if (reportAndPostType.type === "thread") {
+        const run = await client.runs.create(thread_id, "generate_thread", {
+          input: {
+            reports: reportsMapped,
           },
-        },
-      });
+        });
 
-      idsAndTypes.push({
-        type: "post",
-        thread_id,
-        run_id: run.run_id,
-      });
-    }
-  }
+        return {
+          type: "thread" as const,
+          thread_id,
+          run_id: run.run_id,
+        };
+      } else {
+        const reportString = reportsMapped.join("\n");
+        const linksInReport = extractUrls(reportString);
+        const run = await client.runs.create(thread_id, "generate_post", {
+          input: {},
+          command: {
+            goto: "generatePost",
+            update: {
+              report: reportString,
+              links: [linksInReport?.[0] || ""],
+              relevantLinks: [linksInReport?.[0] || ""],
+            },
+          },
+        });
+
+        return {
+          type: "post" as const,
+          thread_id,
+          run_id: run.run_id,
+        };
+      }
+    }),
+  );
 
   if (!process.env.SLACK_CHANNEL_ID || !process.env.SLACK_BOT_OAUTH_TOKEN) {
     return {};
