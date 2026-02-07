@@ -353,7 +353,7 @@ export function extractAllImageUrlsFromMarkdown(text: string): string[] {
 }
 
 const BLACKLISTED_IMAGE_URL_ENDINGS = [".svg", ".ico", ".bmp"];
-const BLACKLISTED_IMAGE_URLS = ["img.shields.io", "contrib.rocks"];
+const BLACKLISTED_IMAGE_URLS = ["img.shields.io", "contrib.rocks", "gravatar.com"];
 
 function isUpdatedSupabaseUrl(url: string): boolean {
   // If the env var isn't set, assume all URLs are updated

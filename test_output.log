@@ -1,0 +1,35 @@
+yarn run v1.22.22
+$ cross-env TZ=America/Los_Angeles node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=\.test\.ts$ --testPathIgnorePatterns=\.int\.test\.ts$
+(node:6996) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/agents/verify-links/verify-links-state.test.ts (36.094 s)
+(node:6995) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/tests/agent.test.ts (36.633 s)
+  ● Console
+
+    console.error
+      No timezone found in date string
+
+      23 |   const timezoneMatch = dateString.match(/ ([A-Z]{3,4}|America\/[A-Za-z_]+)$/);
+      24 |   if (!timezoneMatch) {
+    > 25 |     console.error("No timezone found in date string");
+         |             ^
+      26 |     return undefined;
+      27 |   }
+      28 |
+
+      at timezoneToUtc (src/utils/date.ts:25:13)
+      at Object.<anonymous> (src/tests/agent.test.ts:117:20)
+
+(node:6994) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS src/utils/schedule-date/tests/schedule-date.test.ts (36.693 s)
+PASS src/agents/repurposer/tests/images.test.ts (5.739 s)
+
+Test Suites: 4 passed, 4 total
+Tests:       4 skipped, 48 passed, 52 total
+Snapshots:   0 total
+Time:        42.433 s
+Ran all test suites matching /.test.ts$/i.
+Done in 43.42s.

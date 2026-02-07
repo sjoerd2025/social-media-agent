@@ -173,7 +173,6 @@ export const INPUTS = [
     expected: {
       imageOptions: [
         "https://verdyqfuvvtxtygqekei.supabase.co/storage/v1/object/public/images/screenshot-www.js-craft.io-1736294190656.jpeg",
-        "https://secure.gravatar.com/avatar/02e06dc0b62ea506a4b0adaa9310adc6?s=44&d=blank&r=g", // TODO: this should not be included, but Vertex isn't able to read it.
       ],
     },
   },
