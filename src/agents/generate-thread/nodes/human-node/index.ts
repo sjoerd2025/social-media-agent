@@ -84,6 +84,15 @@ const getUnknownResponseDescription = (state: GenerateThreadState) => {
 
 <hr />`;
   }
+  if (state.next === "invalidDate") {
+    return `# <div style="color: red;">INVALID DATE PROVIDED: '${state.userResponse}'</div>
+
+<div style="color: red;">Please provide a valid date format: 'MM/dd/yyyy hh:mm a z' or 'P1'/'P2'/'P3'.</div>
+
+<div style="color: red;">See the \`Schedule Date\` section for more information.</div>
+
+<hr />`;
+  }
   return "";
 };
 
@@ -226,10 +235,10 @@ export async function humanNode(
   const postDateString = castArgs.date || defaultDateString;
   const postDate = parseDateResponse(postDateString);
   if (!postDate) {
-    // TODO: Handle invalid dates better
-    throw new Error(
-      `Invalid date provided. Expected format: 'MM/dd/yyyy hh:mm a z' or 'P1'/'P2'/'P3'. Received: '${postDateString}'`,
-    );
+    return {
+      next: "invalidDate",
+      userResponse: postDateString,
+    };
   }
 
   let imageState: { imageUrl: string; mimeType: string } | undefined =

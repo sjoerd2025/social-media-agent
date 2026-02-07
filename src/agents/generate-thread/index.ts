@@ -16,8 +16,8 @@ function rewriteOrEndConditionalEdge(
   | "humanNode"
   | typeof END {
   if (state.next) {
-    if (state.next === "unknownResponse") {
-      // If the user's response is unknown, we should route back to the human node.
+    if (state.next === "unknownResponse" || state.next === "invalidDate") {
+      // If the user's response is unknown or invalid, we should route back to the human node.
       return "humanNode";
     } else if (state.next === "rewritePost") {
       return "rewriteThread";
