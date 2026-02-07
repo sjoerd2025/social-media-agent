@@ -56,11 +56,18 @@ export async function findImages(
 
   // Take screenshots of all GitHub links (excluding parent link)
   if (gitHubSubLinks.length) {
-    for await (const ghLink of gitHubSubLinks) {
-      const ghScreenshotUrl = await takeScreenshotAndUpload(ghLink);
-      if (ghScreenshotUrl) {
-        imageUrls.add(ghScreenshotUrl);
-      }
+    // Process links in chunks to limit concurrency
+    const CONCURRENCY_LIMIT = 3;
+    for (let i = 0; i < gitHubSubLinks.length; i += CONCURRENCY_LIMIT) {
+      const chunk = gitHubSubLinks.slice(i, i + CONCURRENCY_LIMIT);
+      await Promise.all(
+        chunk.map(async (ghLink) => {
+          const ghScreenshotUrl = await takeScreenshotAndUpload(ghLink);
+          if (ghScreenshotUrl) {
+            imageUrls.add(ghScreenshotUrl);
+          }
+        }),
+      );
     }
   }
 
