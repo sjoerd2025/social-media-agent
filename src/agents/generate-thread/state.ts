@@ -36,6 +36,7 @@ export const GenerateThreadAnnotation = Annotation.Root({
     | "rewritePost"
     | "updateScheduleDate"
     | "unknownResponse"
+    | "invalidDate"
     | typeof END
     | undefined
   >,
