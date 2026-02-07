@@ -91,8 +91,8 @@ async function filterImageUrls(imageOptions: string[]): Promise<{
     };
   }
 
-  const validImageUrlPromises = imagesWithoutProtected.filter(
-    async (imgUrl) => {
+  const validImageUrlResults = await Promise.all(
+    imagesWithoutProtected.map(async (imgUrl) => {
       if (!isValidUrl(imgUrl)) return false;
 
       try {
@@ -105,10 +105,12 @@ async function filterImageUrls(imageOptions: string[]): Promise<{
         // no-op
       }
       return false;
-    },
+    }),
   );
 
-  const validImageUrls = await Promise.all(validImageUrlPromises);
+  const validImageUrls = imagesWithoutProtected.filter(
+    (_, index) => validImageUrlResults[index],
+  );
   if (!validImageUrls.length) {
     const protectedImageUrls = imageOptions?.length
       ? getProtectedUrls(imageOptions)
@@ -148,7 +150,7 @@ export async function validateImages(
 
   // Split images into chunks of 10
   const imageChunks = chunkArray(imagesWithoutProtected, 10);
-  let allIrrelevantIndices: number[] = [];
+  let allRelevantIndices: number[] = [];
   let baseIndex = 0;
 
   const formattedSystemPrompt = VALIDATE_IMAGES_PROMPT.replace(
@@ -179,7 +181,7 @@ export async function validateImages(
       const chunkAnalysis = parseResult(response.content as string);
       // Convert chunk indices to global indices and add to our list of relevant indices
       const globalIndices = chunkAnalysis.map((index) => index + baseIndex);
-      allIrrelevantIndices = [...allIrrelevantIndices, ...globalIndices];
+      allRelevantIndices = [...allRelevantIndices, ...globalIndices];
     } catch (error) {
       console.error(
         `Failed to validate images.\nImage URLs: ${imageMessages
@@ -188,12 +190,12 @@ export async function validateImages(
           .join(", ")}\n\nError:`,
         error,
       );
-      // Add all indices from the failed chunk to allIrrelevantIndices
+      // Add all indices from the failed chunk to allRelevantIndices
       const failedChunkIndices = Array.from(
         { length: imageChunk.length },
         (_, i) => i + baseIndex,
       );
-      allIrrelevantIndices = [...allIrrelevantIndices, ...failedChunkIndices];
+      allRelevantIndices = [...allRelevantIndices, ...failedChunkIndices];
     }
 
     baseIndex += imageChunk.length;
@@ -206,12 +208,12 @@ export async function validateImages(
       fileUri.startsWith(YOUTUBE_THUMBNAIL_URL),
   );
 
-  // Keep only the relevant images (those whose indices are in allIrrelevantIndices)
+  // Keep only the relevant images (those whose indices are in allRelevantIndices)
   return {
     imageOptions: [
       ...(protectedUrls || []),
       ...(imagesWithoutProtected || []).filter((_, index) =>
-        allIrrelevantIndices.includes(index),
+        allRelevantIndices.includes(index),
       ),
     ],
   };
