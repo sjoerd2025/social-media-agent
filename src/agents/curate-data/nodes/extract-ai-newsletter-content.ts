@@ -5,7 +5,6 @@ import { RedditPostsWithExternalData } from "../../verify-reddit-post/types.js";
 import { TwitterClient } from "../../../clients/twitter/client.js";
 import { TweetV2 } from "twitter-api-v2";
 import { RedditClient } from "../../../clients/reddit/client.js";
-import { SimpleRedditPostWithComments } from "../../../clients/reddit/types.js";
 
 function checkTwitterURLExists(url: string, validatedTweets: TweetV2[]) {
   const tweetId = extractTweetId(url);
@@ -108,12 +107,12 @@ export async function extractAINewsletterContent(
     }
   }
 
-  const redditPosts: SimpleRedditPostWithComments[] = [];
   const client = await RedditClient.fromUserless();
-  for await (const redditURL of relevantRedditURLs) {
-    const postAndComments = await client.getSimplePostAndComments(redditURL);
-    redditPosts.push(postAndComments);
-  }
+  const redditPosts = await Promise.all(
+    relevantRedditURLs.map((redditURL) =>
+      client.getSimplePostAndComments(redditURL),
+    ),
+  );
 
   return {
     validatedTweets: [...state.validatedTweets, ...tweets],
