@@ -1,5 +1,5 @@
 import request from "supertest";
-import { SocialAuthServer } from "./auth-server";
+import { SocialAuthServer } from "./auth-server.js";
 import { Application } from "express";
 
 describe("SocialAuthServer Security", () => {

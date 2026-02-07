@@ -42,13 +42,16 @@ export class SocialAuthServer {
 
   private configureMiddleware(): void {
     this.app.use(helmet());
+    if (process.env.NODE_ENV === "production") {
+      this.app.set("trust proxy", 1);
+    }
     this.app.use(
       session({
         secret: process.env.SESSION_SECRET || "your-session-secret",
         resave: true,
         saveUninitialized: true,
         cookie: {
-          secure: false,
+          secure: process.env.NODE_ENV === "production",
           maxAge: 60000,
         },
       }),
