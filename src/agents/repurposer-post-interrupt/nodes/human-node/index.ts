@@ -115,7 +115,7 @@ export async function humanNode(
 
   let imageState: Image | undefined = undefined;
   const processedImage = await processImageInput(castArgs.image);
-  if (processedImage && processedImage !== "remove") {
+  if (processedImage if (processedImage && processedImage !== "remove") {if (processedImage && processedImage !== "remove") { processedImage !== "remove" if (processedImage && processedImage !== "remove") {if (processedImage && processedImage !== "remove") { processedImage !== "blacklisted") {
     imageState = processedImage;
   } else if (processedImage === "remove") {
     imageState = undefined;
