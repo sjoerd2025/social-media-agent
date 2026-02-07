@@ -41,23 +41,25 @@ async function generatePostFromMessages(
   );
   const shouldSkipUsedUrlsCheck = await skipUsedUrlsCheck(config?.configurable);
 
-  for await (const { link, afterSeconds } of linkAndDelay) {
-    const thread = await client.threads.create();
-    await client.runs.create(thread.thread_id, "generate_post", {
-      input: {
-        links: [link],
-      },
-      config: {
-        configurable: {
-          [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
-          [TEXT_ONLY_MODE]: isTextOnlyMode,
-          [SKIP_CONTENT_RELEVANCY_CHECK]: shouldSkipContentRelevancyCheck,
-          [SKIP_USED_URLS_CHECK]: shouldSkipUsedUrlsCheck,
+  await Promise.all(
+    linkAndDelay.map(async ({ link, afterSeconds }) => {
+      const thread = await client.threads.create();
+      await client.runs.create(thread.thread_id, "generate_post", {
+        input: {
+          links: [link],
         },
-      },
-      afterSeconds,
-    });
-  }
+        config: {
+          configurable: {
+            [POST_TO_LINKEDIN_ORGANIZATION]: postToLinkedInOrg,
+            [TEXT_ONLY_MODE]: isTextOnlyMode,
+            [SKIP_CONTENT_RELEVANCY_CHECK]: shouldSkipContentRelevancyCheck,
+            [SKIP_USED_URLS_CHECK]: shouldSkipUsedUrlsCheck,
+          },
+        },
+        afterSeconds,
+      });
+    }),
+  );
   return {};
 }
 
