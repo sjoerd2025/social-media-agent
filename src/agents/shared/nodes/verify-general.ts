@@ -1,5 +1,4 @@
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import { z } from "zod";
 import { FireCrawlLoader } from "@langchain/community/document_loaders/web/firecrawl";
 import { getPrompts } from "../../generate-post/prompts/index.js";
 import { VerifyContentAnnotation } from "../shared-state.js";
@@ -8,22 +7,7 @@ import { getImagesFromFireCrawlMetadata } from "../../../utils/firecrawl.js";
 import { CurateDataState } from "../../curate-data/state.js";
 import { shouldExcludeGeneralContent } from "../../should-exclude.js";
 import { traceable } from "langsmith/traceable";
-import { verifyContentIsRelevant } from "./verify-content.js";
-
-const RELEVANCY_SCHEMA = z
-  .object({
-    reasoning: z
-      .string()
-      .describe(
-        "Reasoning for why the webpage is or isn't relevant to your company's products.",
-      ),
-    relevant: z
-      .boolean()
-      .describe(
-        "Whether or not the webpage is relevant to your company's products.",
-      ),
-  })
-  .describe("The relevancy of the content to your company's products.");
+import { verifyContentIsRelevant, RELEVANCY_SCHEMA } from "./verify-content.js";
 
 const VERIFY_COMPANY_RELEVANT_CONTENT_PROMPT = `You are a highly regarded marketing employee.
 You're provided with a webpage containing content a third party submitted to you claiming it's relevant to your business context.
